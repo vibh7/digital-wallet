@@ -1,0 +1,46 @@
+# Node & React (frontend)
+dwallet-frontend/node_modules/
+dwallet-frontend/dist/
+dwallet-frontend/.env
+dwallet-frontend/.DS_Store
+
+# Java & Spring Boot (backend)
+dWallet/target/
+dWallet/out/
+dWallet/.env
+dWallet/.DS_Store
+dWallet/.mvn/
+dWallet/.idea/
+dWallet/.classpath
+dWallet/.project
+dWallet/.settings/
+dWallet/.vscode/
+
+# Editors/IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+
+# OS junk
+.DS_Store
+Thumbs.db
+__MACOSX/
+
+# Logs
+*.log
+
+# Coverage/reports
+coverage/
+*.lcov
+
+# Build artifacts
+*.class
+*.jar
+*.war
+/build/
+dist/
+
+# Optional (customize as needed)
+.dockerignore
+.env
