@@ -14,21 +14,21 @@ export default function LoginModal({ onClose, onLoginSuccess }) {
     setMsg("");
     try {
         const res = await axios.post(
-        import.meta.env.VITE_API_BASE_URL + "/auth/login",
-        null,
-        { params: { username, password } }
+            import.meta.env.VITE_API_BASE_URL + "/auth/login",
+            { username, password } // <-- data in body, not params!
         );
         localStorage.setItem("jwt", res.data);
-        console.log("Saved JWT to localStorage:", localStorage.getItem("jwt")); // <<< ADD THIS LINE
+        console.log("Saved JWT to localStorage:", localStorage.getItem("jwt"));
         setMsg("✅ Login successful!");
         setTimeout(() => {
-        onClose?.();
-        onLoginSuccess?.();
-        }, 800); // closes modal, triggers Home to navigate
+            onClose?.();
+            onLoginSuccess?.();
+        }, 800);
     } catch {
         setMsg("❌ Login failed! Check credentials.");
     }
-    };
+};
+
 
   return (
     <AnimatePresence>
