@@ -18,7 +18,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     }
 
     try {
-      await axios.post(import.meta.env.VITE_API_BASE_URL + "api/auth/register", null, {
+      await axios.post(import.meta.env.VITE_API_BASE_URL + "/api/auth/register", null, {
         params: { username, password },
       });
       setMsg("✅ Registration successful!");

@@ -14,7 +14,7 @@ export default function LoginModal({ onClose, onLoginSuccess }) {
     setMsg("");
     try {
         const res = await axios.post(
-            import.meta.env.VITE_API_BASE_URL + "api/auth/login",
+            import.meta.env.VITE_API_BASE_URL + "/api/auth/login",
             { username, password } // <-- data in body, not params!
         );
         localStorage.setItem("jwt", res.data);
