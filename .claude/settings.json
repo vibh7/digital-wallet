@@ -1,0 +1,24 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\vikas\\.claude\\plugins\\cache\\caveman\\caveman\\8bab5c739e13\\hooks\\caveman-statusline.ps1\""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir -p:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(./mvnw:*)",
+      "Bash(mvn:*)",
+      "Bash(java -jar:*)"
+    ]
+  }
+}

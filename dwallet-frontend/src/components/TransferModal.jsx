@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TransferModal({ onClose, onTransferSuccess }) {
@@ -11,12 +11,7 @@ export default function TransferModal({ onClose, onTransferSuccess }) {
     e.preventDefault();
     setMsg("");
     try {
-      const token = localStorage.getItem("jwt");
-      await axios.post(
-        import.meta.env.VITE_API_BASE_URL + "/wallet/transfer",
-        { toUsername, amount: parseFloat(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/wallet/transfer", { toUsername, amount: parseFloat(amount) });
       setMsg("✅ Transfer successful!");
       onTransferSuccess?.(); // <-- refresh on success
       setTimeout(() => {

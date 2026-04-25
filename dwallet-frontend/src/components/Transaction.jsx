@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaExchangeAlt } from "react-icons/fa";
@@ -9,11 +9,8 @@ export default function Transactions() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    axios
-      .get(import.meta.env.VITE_API_BASE_URL + "/wallet/transactions", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    api
+      .get("/wallet/transactions")
       .then((res) => setList(Array.isArray(res.data) ? res.data : []))
       .catch(() => setMsg("Could not load transactions."));
   }, []);

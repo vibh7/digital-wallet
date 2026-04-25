@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import Register from "./Register";
 
@@ -13,10 +13,7 @@ export default function LoginModal({ onClose, onLoginSuccess }) {
     e.preventDefault();
     setMsg("");
     try {
-        const res = await axios.post(
-            import.meta.env.VITE_API_BASE_URL + "/api/auth/login",
-            { username, password } // <-- data in body, not params!
-        );
+        const res = await api.post("/auth/login", null, { params: { username, password } });
         localStorage.setItem("jwt", res.data);
         console.log("Saved JWT to localStorage:", localStorage.getItem("jwt"));
         setMsg("✅ Login successful!");

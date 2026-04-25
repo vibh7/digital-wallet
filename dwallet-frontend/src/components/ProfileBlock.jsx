@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 export default function ProfileBlock() {
   const [user, setUser] = useState({ username: "", registered: "" });
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    // Example: assuming you have `/api/user/me`
-    axios.get(
-      import.meta.env.VITE_API_BASE_URL + "/user/me",
-      { headers: { Authorization: `Bearer ${token}` } }
-    ).then(res => setUser(res.data)).catch(() => {});
+    api.get("/user/me").then(res => setUser(res.data)).catch(() => {});
   }, []);
 
   return (

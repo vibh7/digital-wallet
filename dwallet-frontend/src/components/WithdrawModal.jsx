@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function WithdrawModal({ onClose, onWithdrawSuccess }) {
@@ -10,12 +10,7 @@ export default function WithdrawModal({ onClose, onWithdrawSuccess }) {
     e.preventDefault();
     setMsg("");
     try {
-      const token = localStorage.getItem("jwt");
-      await axios.post(
-        import.meta.env.VITE_API_BASE_URL + "/wallet/withdraw",
-        { amount: parseFloat(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/wallet/withdraw", { amount: parseFloat(amount) });
       setMsg("✅ Withdraw successful!");
       onWithdrawSuccess?.(); // <-- refreshDash after success
       setTimeout(() => {

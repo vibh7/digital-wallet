@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 import ProfileBlock from "./ProfileBlock";
 import DepositModal from "./DepositModal";
 import WithdrawModal from "./WithdrawModal";
 import TransferModal from "./TransferModal";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -23,24 +24,11 @@ export default function Dashboard() {
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
 
-  // Fetch balance + transactions
   const refreshBalanceAndTx = () => {
-    const token = localStorage.getItem("jwt");
-
-    axios
-      .get(import.meta.env.VITE_API_BASE_URL + "/wallet/balance", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setBalance(res.data))
-      .catch(() => setBalance("Error"));
-
-    axios
-      .get(import.meta.env.VITE_API_BASE_URL + "/wallet/transactions", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) =>
-        setTransactions(Array.isArray(res.data) ? res.data.slice(0, 10) : [])
-      )
+    api.get("/wallet/balance").then((res) => setBalance(res.data)).catch(() => setBalance("Error"));
+    api
+      .get("/wallet/transactions")
+      .then((res) => setTransactions(Array.isArray(res.data) ? res.data : []))
       .catch(() => setTransactions([]));
   };
 
@@ -48,41 +36,53 @@ export default function Dashboard() {
     refreshBalanceAndTx();
   }, []);
 
-  // ✅ Accurate Graph Data
-  const graphData = (() => {
+  const recentTx = useMemo(() => {
+    const sorted = [...transactions].sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
+    return sorted.slice(0, 10);
+  }, [transactions]);
+
+  const spendingData = useMemo(() => {
     if (!Array.isArray(transactions) || transactions.length === 0) return [];
 
-    // Sort by oldest first (for accurate running balance)
-    const sorted = [...transactions].sort(
-        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-    );
+    const buckets = new Map();
+    for (const tx of transactions) {
+      if (!tx.timestamp) continue;
+      const d = new Date(tx.timestamp);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+      });
+      const amt = Number(tx.amount) || 0;
+      if (!buckets.has(key)) {
+        buckets.set(key, { key, name: label, spent: 0, received: 0 });
+      }
+      const bucket = buckets.get(key);
+      if (tx.type === "DEBIT") bucket.spent += amt;
+      else if (tx.type === "CREDIT") bucket.received += amt;
+    }
 
-    // Relative running balance just for catalog, not actual wallet
-    let runningBalance = 0;
-    return sorted.map((tx, idx) => {
-        if (tx.type === "CREDIT") runningBalance += Number(tx.amount);
-        else if (tx.type === "DEBIT") runningBalance -= Number(tx.amount);
+    return Array.from(buckets.values())
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .slice(-14);
+  }, [transactions]);
 
-        return {
-        name: new Date(tx.timestamp).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-        }),
-        amount: Number(tx.amount) || 0,
-        type: tx.type,
-        balance: runningBalance,
-        };
-    });
-    })();   
-
+  const totalSpent = useMemo(
+    () => spendingData.reduce((sum, d) => sum + d.spent, 0),
+    [spendingData]
+  );
+  const totalReceived = useMemo(
+    () => spendingData.reduce((sum, d) => sum + d.received, 0),
+    [spendingData]
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white items-center py-6 px-4 sm:px-8">
       <ProfileBlock />
 
-      {/* Main dashboard content */}
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-8 mt-6">
-        {/* Left side — dashboard info */}
         <div className="flex-1 bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-yellow-400 mb-4">
             Dashboard
@@ -95,7 +95,6 @@ export default function Dashboard() {
             {typeof balance === "number" ? `₹${balance}` : balance}
           </div>
 
-          {/* Transactions Table */}
           <div className="mb-8 overflow-x-auto">
             <h2 className="text-xl font-bold text-blue-300 mb-3">
               Recent Transactions
@@ -110,8 +109,8 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {transactions.length > 0 ? (
-                  transactions.map((tx, i) => (
+                {recentTx.length > 0 ? (
+                  recentTx.map((tx, i) => (
                     <tr
                       key={i}
                       className="border-b border-blue-800 hover:bg-blue-300/15 transition"
@@ -150,7 +149,6 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 justify-center mb-4">
             <button
               onClick={() => navigate("/transactions")}
@@ -199,7 +197,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Logout */}
           <button
             onClick={() => {
               localStorage.removeItem("jwt");
@@ -211,44 +208,44 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Right side — Graph */}
         <div className="flex-1 bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-4 text-center">
-            Balance Trend
+          <h2 className="text-2xl font-bold text-yellow-400 mb-1 text-center">
+            Daily Spending
           </h2>
-          {graphData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={graphData}>
+          <p className="text-center text-blue-200 text-sm mb-4">
+            Last {spendingData.length} active days
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 mb-4 text-center">
+            <div className="bg-red-500/20 rounded-xl p-3">
+              <div className="text-xs text-red-200">Total Spent</div>
+              <div className="text-xl font-bold text-red-300">₹{totalSpent.toFixed(2)}</div>
+            </div>
+            <div className="bg-green-500/20 rounded-xl p-3">
+              <div className="text-xs text-green-200">Total Received</div>
+              <div className="text-xl font-bold text-green-300">₹{totalReceived.toFixed(2)}</div>
+            </div>
+          </div>
+
+          {spendingData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={340}>
+              <BarChart data={spendingData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                 <XAxis dataKey="name" stroke="#ccc" />
                 <YAxis stroke="#ccc" />
                 <Tooltip
-                    content={({ active, payload, label }) => {
-                        if (active && payload && payload.length > 0) {
-                        const p = payload[0].payload;
-                        return (
-                            <div className="bg-gray-900 p-3 rounded-lg shadow text-white">
-                            <div><b>{label}</b></div>
-                            <div>Balance: <b>₹{p.balance}</b></div>
-                            <div>
-                                Tx: {p.type === "CREDIT" ? "+" : "-"}₹{p.amount} <span className={p.type === "CREDIT" ? "text-green-400" : "text-red-400"}>{p.type}</span>
-                            </div>
-                            </div>
-                        );
-                    }
-                        return null;
-                    }}
+                  contentStyle={{
+                    backgroundColor: "#111827",
+                    border: "1px solid #374151",
+                    borderRadius: "8px",
+                    color: "#fff",
+                  }}
+                  formatter={(value, name) => [`₹${Number(value).toFixed(2)}`, name]}
                 />
-
-                <Line
-                  type="monotone"
-                  dataKey="balance"
-                  stroke="#00FF88"
-                  strokeWidth={3}
-                  dot={{ fill: "#00FF88", r: 5 }}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
+                <Legend />
+                <Bar dataKey="spent" name="Spent" fill="#f87171" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="received" name="Received" fill="#34d399" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <p className="text-center text-blue-200 text-lg mt-20">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { motion } from "framer-motion";
 
 export default function RegisterModal({ onClose, onSwitchToLogin }) {
@@ -18,9 +18,7 @@ export default function RegisterModal({ onClose, onSwitchToLogin }) {
     }
 
     try {
-      await axios.post(import.meta.env.VITE_API_BASE_URL + "/api/auth/register", null, {
-        params: { username, password },
-      });
+      await api.post("/auth/register", null, { params: { username, password } });
       setMsg("✅ Registration successful!");
       setTimeout(() => {
         onClose();

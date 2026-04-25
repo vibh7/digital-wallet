@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DepositModal({ onClose, onDepositSuccess }) {
@@ -10,12 +10,7 @@ export default function DepositModal({ onClose, onDepositSuccess }) {
     e.preventDefault();
     setMsg("");
     try {
-      const token = localStorage.getItem("jwt");
-      await axios.post(
-        import.meta.env.VITE_API_BASE_URL + "/wallet/deposit",
-        { amount: parseFloat(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/wallet/deposit", { amount: parseFloat(amount) });
       setMsg("✅ Deposit successful!");
       onDepositSuccess?.(); // <-- Important: refresh right after success
       setTimeout(() => {
