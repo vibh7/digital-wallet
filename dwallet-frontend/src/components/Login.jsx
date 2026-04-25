@@ -9,20 +9,30 @@ export default function LoginModal({ onClose, onLoginSuccess }) {
   const [msg, setMsg] = useState("");
   const [showRegister, setShowRegister] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+
   const loginUser = async (e) => {
     e.preventDefault();
     setMsg("");
+    setLoading(true);
+    const slowTimer = setTimeout(
+      () => setMsg("⏳ Waking server (free tier) — first login can take ~30s…"),
+      2500
+    );
     try {
         const res = await api.post("/auth/login", null, { params: { username, password } });
+        clearTimeout(slowTimer);
         localStorage.setItem("jwt", res.data);
-        console.log("Saved JWT to localStorage:", localStorage.getItem("jwt"));
         setMsg("✅ Login successful!");
         setTimeout(() => {
             onClose?.();
             onLoginSuccess?.();
         }, 800);
     } catch {
+        clearTimeout(slowTimer);
         setMsg("❌ Login failed! Check credentials.");
+    } finally {
+        setLoading(false);
     }
 };
 
@@ -68,8 +78,11 @@ export default function LoginModal({ onClose, onLoginSuccess }) {
                 required
               />
 
-              <button className="mt-2 bg-yellow-400 text-blue-900 py-2.5 rounded-xl font-semibold hover:bg-yellow-300 hover:scale-105 transition-transform">
-                Login
+              <button
+                disabled={loading}
+                className="mt-2 bg-yellow-400 text-blue-900 py-2.5 rounded-xl font-semibold hover:bg-yellow-300 hover:scale-105 transition-transform disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {loading ? "Logging in…" : "Login"}
               </button>
               {msg && (
                 <p className="text-center text-sm mt-3 text-blue-100 font-medium">

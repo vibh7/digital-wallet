@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import Transactions from "./components/Transaction";
 import ErrorBoundary from "./components/ErrorBoundary";
+import api from "./api";
 
 // Helper for protected routes
 function PrivateRoute({ children }) {
@@ -12,6 +13,10 @@ function PrivateRoute({ children }) {
 }
 
 function App() {
+  useEffect(() => {
+    api.get("/health").catch(() => {});
+  }, []);
+
   return (
     <ErrorBoundary>
     <BrowserRouter>
