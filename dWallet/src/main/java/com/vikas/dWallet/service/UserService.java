@@ -27,6 +27,10 @@ public class UserService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    public boolean existsByUsername(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+
     public User registerNewUser(String username, String rawPassword) {
         String hashedPassword = passwordEncoder.encode(rawPassword);
 

@@ -22,6 +22,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestParam String username, @RequestParam String password) {
+        if (userService.existsByUsername(username)) {
+            return ResponseEntity.status(409).body("Username already taken");
+        }
         User user = userService.registerNewUser(username, password);
         return ResponseEntity.ok("User registered successfully with ID: " + user.getId());
     }
